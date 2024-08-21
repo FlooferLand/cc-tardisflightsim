@@ -1,6 +1,7 @@
 local program = require("program")
 local theme = require("theme")
 local lib = require("library")
+local json= require("lib.json")
 
 local configManager = lib.config.make("TardisTrainer/conf.json")
 local audioAssets = {}
@@ -128,27 +129,22 @@ end
 
 local function addAudioAssets(assetsTable)
     for _, asset in pairs(assetsTable) do
-        if type(asset) ~= "table" then
-            goto continue
-        end
-        if asset["assetType"] == nil or asset.assetType ~= "audio" then
-            if type(asset) == "table" then
-                addAudioAssets(asset)
-            end
-            goto continue
-        end
-        table.insert(audioAssets, asset)
-        table.insert(audioHandles, function()
-            while true do
-                if asset.playing then
-                    for _, speaker in pairs(program.devices.speakers) do
-                        asset:runInternal(speaker, program.low.deltaTime)
+        if type(asset) == "table" and asset["assetType"] == "audio" then
+            -- print(json.stringify(asset))
+            table.insert(audioAssets, asset)
+            table.insert(audioHandles, function()
+                while true do
+                    if asset.playing then
+                        for _, speaker in pairs(program.devices.speakers) do
+                            asset:runInternal(speaker, program.low.deltaTime)
+                        end
                     end
+                    coroutine.yield()
                 end
-                coroutine.yield()
-            end
-        end)
-        ::continue::
+            end)
+        elseif type(asset) == "table" then
+            addAudioAssets(asset)
+        end
     end
 end
 addAudioAssets(program.assets)

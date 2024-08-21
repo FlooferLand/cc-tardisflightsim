@@ -20,7 +20,7 @@ local theme = {
 }
 theme.unloadTheme = function(monitors)
     for key, value in pairs(theme) do
-        if type(value) ~= "table" then goto continue end
+        if type(value) ~= "table" then break end
         for name, color in pairs(value) do
             if type(color) == "number" and hexColors[name] ~= nil then
                 for _, monitor in pairs(monitors) do
@@ -29,7 +29,6 @@ theme.unloadTheme = function(monitors)
             end
         end
     end
-    ::continue::
 end
 theme.loadBuiltinTheme = function(monitors, themeToLoad)
     theme.unloadTheme()

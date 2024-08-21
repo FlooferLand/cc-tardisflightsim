@@ -1,5 +1,5 @@
 -- Launcher and installer for the trainer
--- Has to be regularly updated over on (INSERT LINK)
+-- Has to be regularly updated over on https://pastebin.com/wQq755Nd
 
 -- Paths
 local paths = {}

@@ -99,6 +99,8 @@ function program:update()
             os.cancelTimer(self.timers.askNext)
             self.timers.askNext = nil
         end
+    else
+        self.assets.themeSong:run()
     end
 end
 
