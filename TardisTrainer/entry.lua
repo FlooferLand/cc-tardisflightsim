@@ -38,7 +38,7 @@ local function eventHandler()
 
         -- Error sound
         if currentError and lastError ~= currentError then
-            for speaker in speakers do
+            for speaker in pairs(speakers) do
                 speaker.playNote("harp", 1.0, 0.8)
             end
         end
@@ -113,7 +113,7 @@ local function updateHandler()
 
         -- Error sound
         if program.messages.error ~= nil and lastError ~= program.messages.error then
-            for speaker in speakers do
+            for speaker in pairs(speakers) do
                 speaker.playNote("harp", 1.0, 0.5)
             end
         end
@@ -132,16 +132,16 @@ local function addAudioAssets(assetsTable)
         if type(asset) == "table" and asset["assetType"] == "audio" then
             -- print(json.stringify(asset))
             table.insert(audioAssets, asset)
-            table.insert(audioHandles, function()
-                while true do
-                    if asset.playing then
-                        for _, speaker in pairs(program.devices.speakers) do
+            for _, speaker in pairs(program.devices.speakers) do
+                table.insert(audioHandles, function()
+                    while true do
+                        if asset.playing then
                             asset:runInternal(speaker, program.low.deltaTime)
                         end
+                        coroutine.yield()
                     end
-                    coroutine.yield()
-                end
-            end)
+                end)
+            end
         elseif type(asset) == "table" then
             addAudioAssets(asset)
         end
