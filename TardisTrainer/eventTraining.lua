@@ -23,7 +23,7 @@ end
 local c = {
     Throttle         = createControl("Throttle",  0, { "throt", "throttle", "speed" }),
     Increment        = createControl("Increment",  1, { "inc", "increment" }),
-    Randomiser       = createControl("Randomiser", 2, { "rand", "random" }),
+    Randomiser       = createControl("Randomiser", 2, { "rand", "random", "randomiser", "randomizer" }),
     Dimension        = createControl("Dimension", 3, { "dim", "dimension" }),
     ExteriorFacing   = createControl("Exterior facing", 4, { "exterior facing", "facing", "exterior", "direction" }),
     VerticalLanding  = createControl("Vertical landing gear",  5, { "vertical landing", "landing", "vertical landing gear" }),
