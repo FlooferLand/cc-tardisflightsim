@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run program",
+            "type": "shell",
+            "command": "C:/Program Files/CraftOS-PC/CraftOS-PC.exe",
+            "args": [
+                "--id",  "1",
+                "--script", "startupProgram.lua"
+            ],
+            "presentation": {
+                "reveal": "never",
+                "focus": false
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "run computer",
+            "type": "shell",
+            "command": "C:/Program Files/CraftOS-PC/CraftOS-PC.exe",
+            "args": [
+                "--id", "1"
+            ],
+            "presentation": {
+                "reveal": "never",
+                "focus": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}
