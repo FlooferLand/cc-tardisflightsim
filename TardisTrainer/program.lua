@@ -137,7 +137,7 @@ function program:draw(monitor)
     elseif self.state.page == pages.SelectThrottle then
         monitor.setCursorPos(1, 1)
         print("Select the throttle")
-        print(lib.extraMath.clamp(self.state.throttle, 1, 15))
+        print(lib.extraMath.clamp(self.state.throttle, 1, 9))
     elseif self.state.page == pages.EventTraining then
         monitor.setCursorPos(1, 1)
         if self.state.activeTemporalEvent then
@@ -244,7 +244,7 @@ function program:onKey(key, pressed, held)
         elseif key == keys.down or key == keys.s then
             throttle = throttle - 1
         end
-        self.state.throttle = lib.extraMath.clamp(throttle, 1, 15)
+        self.state.throttle = lib.extraMath.clamp(throttle, 1, 9)
 
         if key == keys.enter and self.state.throttle > 0 then
             self.state.page = pages.EventTraining
