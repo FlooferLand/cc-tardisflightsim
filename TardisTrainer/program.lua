@@ -23,7 +23,7 @@ local program = {
         temporalAdditions = true
     },
     devices = {
-        monitors = { term.current() },  -- TODO: Find some way to add peripheral.find("monitor") and multi-monitor support
+        monitors = { term.current(), peripheral.find("monitor") },  -- TODO: Find some way to add peripheral.find("monitor") and multi-monitor support
         speakers = { peripheral.find("speaker") }
     },
     low = {  -- Low-end system stuff
