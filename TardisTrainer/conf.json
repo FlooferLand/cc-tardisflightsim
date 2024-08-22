@@ -1,1 +1,1 @@
-{"redstoneEventInputSide":"left", "redstoneThrottleInputSide":"right", "flightSound":true, "theme":"generic", "limitedTime":true, "music":true, "temporalAdditions":true, "firstTimeSetup":true}
+{"theme":"generic", "redstoneEventInputSide":"left", "limitedTime":true, "muteAudio":false, "redstoneThrottleInputSide":"right", "flightSound":true, "music":true, "firstTimeSetup":true, "temporalAdditions":true}

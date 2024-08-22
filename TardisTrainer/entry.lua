@@ -1,7 +1,6 @@
 local program = require("program")
 local theme = require("theme")
 local lib = require("library")
-local json= require("lib.json")
 
 local configManager = lib.config.make("TardisTrainer/conf.json")
 local audioAssets = {}
@@ -152,7 +151,9 @@ local function addAudioAssets(assetsTable)
         end
     end
 end
-addAudioAssets(program.assets)
+if not program.config.muteAudio then
+    addAudioAssets(program.assets)
+end
 
 -- Entering the program
 local loadedConfig = configManager:load(program.config)

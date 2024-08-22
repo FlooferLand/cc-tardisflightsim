@@ -101,6 +101,9 @@ function audio:runInternal(speaker, delta)
         -- before moving onto the next buffer
         while not speaker.playAudio(newBuffer) do
             os.pullEvent("speaker_audio_empty")
+            if not self.playing then
+                break
+            end
         end
 
         previousBuffer = newBuffer

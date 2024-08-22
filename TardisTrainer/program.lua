@@ -25,7 +25,8 @@ local program = {
         temporalAdditions = true,
         limitedTime = true,
         redstoneEventInputSide = "left",
-        redstoneThrottleInputSide = "right"
+        redstoneThrottleInputSide = "right",
+        muteAudio = false
     },
     devices = {
         monitors = { term.current(), peripheral.find("monitor") },  -- TODO: Find some way to add peripheral.find("monitor") and multi-monitor support
@@ -86,6 +87,8 @@ function program:nextPage()
         self.state.page = pages.SelectThrottle
     elseif self.state.page == pages.SelectThrottle then
         self.state.page = pages.EventTraining
+        print("Loading..")
+        sleep(1.5)
     end
 end
 
@@ -105,7 +108,9 @@ end
 
 --- Called when the program begins
 function program:start()
-    
+    if self.config.muteAudio then
+        self.devices.speakers = {}
+    end
 end
 
 --- Called several times per frame (consistently)
@@ -115,10 +120,10 @@ function program:update()
         self.assets.themeSong:run()
     elseif self.state.page == pages.EventTraining then
         -- Audio
-        self.assets.flight.takeoff:runOnce()
-        if self.assets.flight.takeoff.timesAlreadyLooped > 0 then
-            self.assets.flight.loop:run()
-        end
+       self.assets.flight.takeoff:runOnce()
+       if self.assets.flight.takeoff.timesAlreadyLooped > 0 then
+           self.assets.flight.loop:run()
+       end
 
         -- Timer
         if self.timers.askNext == nil and self.messages.flightHint == nil then
@@ -403,7 +408,8 @@ function program:onKey(key, pressed, held)
             self:nextPage()
         end
 
-        self.assets.button:playOnce()
+        -- FIXME: All audio intersects somehow, playing over each other at random times
+        -- self.assets.button:playOnce()
     elseif self.state.page == pages.EventTraining then
         if key == keys.enter then
             self:tryResetGuessTimer()
