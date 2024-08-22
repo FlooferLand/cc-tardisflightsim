@@ -21,18 +21,18 @@ local function createControl(displayName, redstoneSignal, guessNames)
     return control
 end
 local c = {
-    Throttle         = createControl("Throttle",  0, { "throt", "throttle", "speed" }),
-    Increment        = createControl("Increment",  1, { "inc", "increment" }),
-    Randomiser       = createControl("Randomiser", 2, { "rand", "random", "randomiser", "randomizer" }),
-    Dimension        = createControl("Dimension", 3, { "dim", "dimension" }),
-    ExteriorFacing   = createControl("Exterior facing", 4, { "exterior facing", "facing", "exterior", "direction" }),
-    VerticalLanding  = createControl("Vertical landing gear",  5, { "vertical landing", "landing", "vertical landing gear" }),
-    Communicator     = createControl("Communicator",  6, { "com", "comm", "communicator" }),
-    Refueler         = createControl("Refueler", 7, { "refueler", "refuel", "fuel" }),
-    DoorLock         = createControl("Door lock", 8, { "door", "door lock", "door control" }),
-    PosX             = createControl("X", 9, { "x", "pos x", "x pos", "x offset", "x off", "x increment", "increment x" }),
-    PosY             = createControl("Y", 10, { "y", "pos y", "y pos", "y offset", "y off", "y increment", "increment y" }),
-    PosZ             = createControl("Z", 11, { "z", "pos z", "z pos", "z offset", "z off", "z increment", "increment z" })
+    Throttle         = createControl("Throttle",  1, { "throt", "throttle", "speed" }),
+    Increment        = createControl("Increment",  2, { "inc", "increment" }),
+    Randomiser       = createControl("Randomiser", 3, { "rand", "random", "randomiser", "randomizer" }),
+    Dimension        = createControl("Dimension", 4, { "dim", "dimension" }),
+    ExteriorFacing   = createControl("Exterior facing", 5, { "exterior facing", "facing", "exterior", "direction" }),
+    VerticalLanding  = createControl("Vertical landing gear", 6, { "vertical landing", "landing", "vertical landing gear" }),
+    Communicator     = createControl("Communicator", 7, { "com", "comm", "communicator" }),
+    Refueler         = createControl("Refueler", 8, { "refueler", "refuel", "fuel" }),
+    DoorLock         = createControl("Door lock", 9, { "door", "door lock", "door control" }),
+    PosX             = createControl("X", 10, { "x", "pos x", "x pos", "x offset", "x off", "x increment", "increment x" }),
+    PosY             = createControl("Y", 11, { "y", "pos y", "y pos", "y offset", "y off", "y increment", "increment y" }),
+    PosZ             = createControl("Z", 12, { "z", "pos z", "z pos", "z offset", "z off", "z increment", "increment z" })
 }
 
 local eventIdIncrement = 0

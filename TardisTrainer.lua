@@ -18,6 +18,8 @@ local sources = {
     "library.lua",
     "program.lua",
     "theme.lua",
+
+    "README.txt"
 }
 local assets = {
     "Button.dfpwm",

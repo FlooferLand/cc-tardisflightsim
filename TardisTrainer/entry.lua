@@ -11,7 +11,7 @@ local function eventHandler()
     while program.low.running do
         local lastError = currentError
 
-        local event, data1, data2 = os.pullEventRaw()  ---@diagnostic disable-line: undefined-field
+        local event, data1, data2, data3 = os.pullEventRaw()  ---@diagnostic disable-line: undefined-field
         if event == "terminate" then
             program.low.running = false
             return
@@ -31,9 +31,14 @@ local function eventHandler()
         elseif event == "char" then
             local char = data1
             program:onChar(char)
+        elseif event == "mouse_click" then
+            local button, x, y = data1, data2, data3
+            program:onMouseClick(button, x, y)
         elseif event == "timer" then
             local timerId = data1
             program:onTimer(timerId)
+        elseif event == "redstone" then
+            program:onRedstone()
         end
 
         -- Error sound

@@ -23,7 +23,9 @@ local program = {
         music = true,
         flightSound = true,
         temporalAdditions = true,
-        limitedTime = true
+        limitedTime = true,
+        redstoneEventInputSide = "left",
+        redstoneThrottleInputSide = "right"
     },
     devices = {
         monitors = { term.current(), peripheral.find("monitor") },  -- TODO: Find some way to add peripheral.find("monitor") and multi-monitor support
@@ -40,6 +42,7 @@ local program = {
         throttle = 0,
         activeTemporalEvent = nil,
         currentGuess = "",
+        currentGuessRedstone = 0,
         currentScore = 0
     },
     drawState = {
@@ -71,17 +74,33 @@ local program = {
     theme = lib.deepcopy(theme)
 }
 
+function program:nextPage()
+    if self.state.page == pages.Title then
+        self.assets.themeSong.effects.volume = 0.8
+        if self.config.firstTimeSetup then
+            self.state.page = pages.Tutorial
+        else 
+            self.state.page = pages.SelectThrottle
+        end
+    elseif self.state.page == pages.Tutorial then
+        self.state.page = pages.SelectThrottle
+    elseif self.state.page == pages.SelectThrottle then
+        self.state.page = pages.EventTraining
+    end
+end
+
 function program:tryResetGuessTimer()
     if self.timers.askNext ~= nil then
         os.cancelTimer(self.timers.askNext)  ---@diagnostic disable-line: undefined-field
     end
     self.timers.askNext = os.startTimer(lib.eventTimeFromThrottle(self.state.throttle))  ---@diagnostic disable-line: undefined-field
     if self.messages.flightHint == nil then
-        program:onGuessFinished()
+        self:onGuessFinished()
     else
         self.messages.flightHint = nil
     end
     self.state.currentGuess = ""
+    self.state.currentGuessRedstone = 0
 end
 
 --- Called when the program begins
@@ -229,6 +248,9 @@ function program:draw(monitor)
         local _, y = monitor.getSize()
         monitor.setCursorPos(1, y - 2)
         print("Score: " .. self.state.currentScore)
+        print("Time: " .. lib.eventTimeFromThrottle(self.state.throttle) .. "s (throt=" .. self.state.throttle .. ")")
+        monitor.setTextColor(self.theme.front.secondary)
+        print("(time limits for training are currently not available)")
     end
 end
 
@@ -251,11 +273,12 @@ end
 
 ---@param control table
 ---@param guess string
+---@param guessRed integer
 ---@return boolean
-function program:isGuessCorrect(control, guess)
+function program:isGuessCorrect(control, guess, guessRed)
     local correctGuess = false
     for _, name in pairs(control.guessNames) do
-        if string.find(string.lower(guess), string.lower(name), 1, true) then
+        if string.find(string.lower(guess), string.lower(name), 1, true) or guessRed == control.redstoneSignal then
             correctGuess = true
             break
         end
@@ -273,10 +296,10 @@ function program:onGuessFinished()
 
     -- Deciding if the player succeeded completing the current event or not
     local temporalEvent = self.state.activeTemporalEvent
-    if temporalEvent ~= nil and #self.state.currentGuess > 0 then
+    if temporalEvent ~= nil then
         local validGuesses = 0
         for _, control in pairs(temporalEvent.controls) do
-            if program:isGuessCorrect(control, self.state.currentGuess) then
+            if self:isGuessCorrect(control, self.state.currentGuess, self.state.currentGuessRedstone) then
                 validGuesses = validGuesses + 1
             end
 
@@ -293,6 +316,7 @@ function program:onGuessFinished()
             if validGuesses == (#temporalEvent.controls) then
                 self.state.currentScore = self.state.currentScore + 1
                 self.state.currentGuess = ""
+                self.state.currentGuessRedstone = 0
             else
                 if not temporalEvent.optional then
                     self.state.currentScore = self.state.currentScore - 1
@@ -310,7 +334,7 @@ function program:onGuessFinished()
                     local comma = (i < #temporalEvent.controls and ", " or "")
                     flightHint.controls = flightHint.controls .. control.displayName .. comma
 
-                    if program:isGuessCorrect(control, self.state.currentGuess) then
+                    if self:isGuessCorrect(control, self.state.currentGuess, self.state.currentGuessRedstone) then
                         flightHint.youGot = flightHint.youGot .. control.displayName .. comma
                     else
                         flightHint.youGot = "(none)"
@@ -334,6 +358,27 @@ function program:onChar(char)
     end
 end
 
+-- Called when redstone changes in some way
+function program:onRedstone()
+    local eventInput = redstone.getAnalogInput(self.config.redstoneEventInputSide)
+    if eventInput > 0 then
+        self.state.currentGuessRedstone = eventInput
+        self:tryResetGuessTimer()
+    end
+
+    local throttleInput = redstone.getAnalogInput(self.config.redstoneThrottleInputSide)
+    if throttleInput > 0 then
+        self.state.throttle = lib.extraMath.clamp(throttleInput, 1, 9)
+    end
+end
+
+-- Called when the mouse clicks
+function program:onMouseClick(button, x, y)
+    if self.state.page == pages.Title or self.state.page == pages.Tutorial or self.state.page == pages.SelectThrottle then
+        self:nextPage()
+    end
+end
+
 -- Called when a key is pressed, held, or released
 function program:onKey(key, pressed, held)
     if held or not pressed then
@@ -341,14 +386,9 @@ function program:onKey(key, pressed, held)
     end
 
     if self.state.page == pages.Title then
-        if self.config.firstTimeSetup then
-            self.state.page = pages.Tutorial
-        else 
-            self.state.page = pages.SelectThrottle
-        end
-        self.assets.themeSong.effects.volume = 0.8
+        self:nextPage()
     elseif self.state.page == pages.Tutorial then
-        self.state.page = pages.SelectThrottle
+        self:nextPage()
     elseif self.state.page == pages.SelectThrottle then
         -- Picking the throttle
         local throttle = self.state.throttle
@@ -360,8 +400,7 @@ function program:onKey(key, pressed, held)
         self.state.throttle = lib.extraMath.clamp(throttle, 1, 9)
 
         if key == keys.enter and self.state.throttle > 0 then
-            sleep(0.1)
-            self.state.page = pages.EventTraining
+            self:nextPage()
         end
 
         self.assets.button:playOnce()
