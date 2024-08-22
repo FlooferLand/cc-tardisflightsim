@@ -2,6 +2,8 @@ local lib = require("library")
 local theme = require("theme")
 local audio = require("audio")
 local eventTraining = require("eventTraining")
+local nimg = require('lib.nimg')
+local json = require('lib.json')
 
 local pages = {
     Title = 0,
@@ -20,7 +22,8 @@ local program = {
 
         music = true,
         flightSound = true,
-        temporalAdditions = true
+        temporalAdditions = true,
+        limitedTime = true
     },
     devices = {
         monitors = { term.current(), peripheral.find("monitor") },  -- TODO: Find some way to add peripheral.find("monitor") and multi-monitor support
@@ -34,14 +37,20 @@ local program = {
     },
     state = {
         page = pages.Title,
-        tardisFrameToDraw = 0,
         throttle = 0,
         activeTemporalEvent = nil,
         currentGuess = "",
         currentScore = 0
     },
+    drawState = {
+        repositionStars = 0,
+        starsPos = {},
+        tardisSpin = 0,
+    },
     timers = {
-        askNext = nil
+        askNext = nil,
+        drawTardisSpin = nil,
+        drawStars = nil
     },
     assets = {
         themeSong = audio.load("TardisTrainer/assets/themeSong.dfpwm"),
@@ -50,26 +59,29 @@ local program = {
             loop = audio.load("TardisTrainer/assets/FlightLoop.dfpwm"),
         },
         button = audio.load("TardisTrainer/assets/Button.dfpwm"),
-        spinnyTardis = {
-            paintutils.loadImage("TardisTrainer/assets/spinnyTardis_0.nfp"),
-            paintutils.loadImage("TardisTrainer/assets/spinnyTardis_1.nfp")
+        spinnyTardisFrames = {
+            nimg.loadImage("TardisTrainer/assets/spinnyTardis_0"),
+            nimg.loadImage("TardisTrainer/assets/spinnyTardis_1")
         }
     },
     messages = {
         error = nil,       --- @type string|nil
-        flightHint = nil   --- @type string|nil
+        flightHint = nil   --- @type table|nil
     },
     theme = lib.deepcopy(theme)
 }
 
-function program:resetGuessTimer()
-    self.state.currentGuess = ""
-    self.messages.flightHint = nil
+function program:tryResetGuessTimer()
     if self.timers.askNext ~= nil then
-        os.cancelTimer(self.timers.askNext)
+        os.cancelTimer(self.timers.askNext)  ---@diagnostic disable-line: undefined-field
     end
     self.timers.askNext = os.startTimer(lib.eventTimeFromThrottle(self.state.throttle))  ---@diagnostic disable-line: undefined-field
-    program:onGuessFinished()
+    if self.messages.flightHint == nil then
+        program:onGuessFinished()
+    else
+        self.messages.flightHint = nil
+    end
+    self.state.currentGuess = ""
 end
 
 --- Called when the program begins
@@ -90,41 +102,79 @@ function program:update()
         end
 
         -- Timer
-        if self.timers.askNext == nil then
-            self:resetGuessTimer()
+        if self.timers.askNext == nil and self.messages.flightHint == nil then
+            self:tryResetGuessTimer()
         end
 
         -- Hint screen
-        if self.messages.flightHint ~= nil then
-            os.cancelTimer(self.timers.askNext)
+        if self.messages.flightHint ~= nil and self.timers.askNext ~= nil then
+            os.cancelTimer(self.timers.askNext)  ---@diagnostic disable-line: undefined-field
             self.timers.askNext = nil
         end
     else
         self.assets.themeSong:run()
+    end
+
+    -- General timers
+    if self.timers.drawTardisSpin == nil then
+        self.timers.drawTardisSpin = os.startTimer(0.3)  ---@diagnostic disable-line: undefined-field
+    end
+    if self.timers.drawStars == nil then
+        self.timers.drawStars = os.startTimer(0.2)  ---@diagnostic disable-line: undefined-field
     end
 end
 
 -- Like update, but called for every single monitor
 function program:draw(monitor)
     if self.state.page == pages.Title then
-        local pad = 10
-        local width = 7
-        local height = 6
-        local x, y = monitor.getSize()
-        x = (x / 2)
-        y = (y / 2)
-        local xTardis = x - width - pad
-        local yTardis = y - height
+        local pad = 12
+        local tardisWidth = 7
+        local tardisHeight = 6
+        local width, height = monitor.getSize()
+        local xMiddle = (width / 2)
+        local yMiddle = (height / 2)
+        local xTardis = xMiddle - tardisWidth - pad
+        local yTardis = yMiddle - tardisHeight
 
-        -- TODO: Use delta-time and test if it works!
-        paintutils.drawImage(self.assets.spinnyTardis[1 + math.floor((self.state.tardisFrameToDraw) % 2)], xTardis, yTardis)
-        self.state.tardisFrameToDraw = self.state.tardisFrameToDraw + 0.2
+        -- Drawing the stars
+        if self.drawState.repositionStars then
+            table.clear(self.drawState.starsPos)
+            for i = 0, 64 / (width / height) do
+                local cols = { colors.gray, colors.lightGray }
+                self.drawState.starsPos[i] = {
+                    x = math.random(0, width),
+                    y = math.random(0, height),
+                    color = cols[math.random(1, #cols)],
+                }
+            end
+            self.drawState.repositionStars = false
+        end
+        for _, star in pairs(self.drawState.starsPos) do
+            local chars = { '*', '+', 'x' }
+            monitor.setBackgroundColor(self.theme.back.clear)
+            monitor.setTextColor(star.color)
+            monitor.setCursorPos(star.x, star.y)
+            monitor.write(chars[math.random(1, #chars)])
+        end
+        
+        -- Drawing the spinning TARDIS
+        self.assets.spinnyTardisFrames[1 + self.drawState.tardisSpin % #self.assets.spinnyTardisFrames]:draw(monitor, xTardis, yTardis)
+
+        -- Title
+        monitor.setCursorPos(2, 2)
+        monitor.setBackgroundColor(self.theme.back.clear2)
+        monitor.setTextColor(self.theme.front.primary)
+        print("TARDIS Training Software")
+        monitor.setCursorPos(2, 3)
+        monitor.setTextColor(self.theme.front.secondary)
+        print("by FlooferLand (T Corvus Escort 1)")
 
         -- Begin text
-        local text = "Press any to begin"
-        monitor.setBackgroundColor(colors.black)
-        monitor.setCursorPos(xTardis + pad + (#text * 0.25), y)
-        print(text)
+        local beginText = "Press any to begin"
+        monitor.setBackgroundColor(self.theme.back.clear)
+        monitor.setTextColor(self.drawState.tardisSpin == 2 and self.theme.front.primary or self.theme.front.text)
+        monitor.setCursorPos(xTardis + pad + (#beginText * 0.3), yMiddle)
+        print(beginText)
     elseif self.state.page == pages.Tutorial then
         monitor.setCursorPos(1, 1)
         print("Welcome to event training!\n")
@@ -136,16 +186,23 @@ function program:draw(monitor)
         -- TODO: Add a command line that sorta acts like a main menu
     elseif self.state.page == pages.SelectThrottle then
         monitor.setCursorPos(1, 1)
-        print("Select the throttle")
-        print(lib.extraMath.clamp(self.state.throttle, 1, 9))
+        print("Select the throttle using your arrow keys")
+        local leftArrow = (self.state.throttle > 1) and "<" or " "
+        local rightArrow = (self.state.throttle < 9) and ">" or " "
+        print(leftArrow .. " " .. lib.extraMath.clamp(self.state.throttle, 1, 9) .. " / 9" .. " " .. rightArrow)
     elseif self.state.page == pages.EventTraining then
         monitor.setCursorPos(1, 1)
         if self.state.activeTemporalEvent then
+            monitor.setCursorPos(1, 1)
+            monitor.setTextColor(self.theme.front.text)
             print("You have encountered a temporal event!")
-            print(self.state.activeTemporalEvent.displayName)
+            monitor.setCursorPos(1, 2)
+            monitor.setTextColor(self.theme.front.primary)
+            print("> " .. self.state.activeTemporalEvent.displayName)
             print()
 
             -- Displaying the current guess
+            monitor.setTextColor(self.theme.front.secondary)
             print("Your answer >" .. self.state.currentGuess .. "<")
         else
             print("Flying normally.. (no events active)\n")
@@ -155,10 +212,20 @@ function program:draw(monitor)
         if self.messages.flightHint ~= nil then
             monitor.clear()
             monitor.setCursorPos(1, 1)
-            print(self.messages.flightHint)
+            monitor.setTextColor(self.theme.front.text)
+            monitor.setBackgroundColor(self.theme.back.clear2)
+            print("Wrong answer!\n")
+            monitor.setBackgroundColor(self.theme.back.clear)
+            monitor.setTextColor(self.theme.front.secondary)
+            print(self.messages.flightHint.name)
+            print(self.messages.flightHint.description .. "\n")
+            monitor.setTextColor(self.theme.front.primary)
+            print("Correct:  " .. self.messages.flightHint.controls)
+            print("You got:  " .. self.messages.flightHint.youGot)
         end
 
         -- Displaying the score
+        monitor.setTextColor(self.theme.front.text)
         local _, y = monitor.getSize()
         monitor.setCursorPos(1, y - 2)
         print("Score: " .. self.state.currentScore)
@@ -167,44 +234,90 @@ end
 
 -- Called when a timer is finished
 function program:onTimer(id)
+    -- Geuss timer
     if id == self.timers.askNext and self.messages.flightHint ~= nil then
-        self:resetGuessTimer()
+        self:tryResetGuessTimer()
     end
+
+    -- Drawing
+    if id == self.timers.drawTardisSpin then
+        self.drawState.tardisSpin = self.drawState.tardisSpin + 1
+        self.timers.drawTardisSpin = nil
+    elseif id == self.timers.drawStars then
+        self.drawState.repositionStars = true
+        self.timers.drawStars = nil
+    end
+end
+
+---@param control table
+---@param guess string
+---@return boolean
+function program:isGuessCorrect(control, guess)
+    local correctGuess = false
+    for _, name in pairs(control.guessNames) do
+        if string.find(string.lower(guess), string.lower(name), 1, true) then
+            correctGuess = true
+            break
+        end
+    end
+    return correctGuess
 end
 
 --- Called every time the timer triggers
 function program:onGuessFinished()
+    if self.messages.flightHint ~= nil then
+        return
+    end
+
+    local debug = false
+
     -- Deciding if the player succeeded completing the current event or not
     local temporalEvent = self.state.activeTemporalEvent
-    if temporalEvent ~= nil then
+    if temporalEvent ~= nil and #self.state.currentGuess > 0 then
         local validGuesses = 0
         for _, control in pairs(temporalEvent.controls) do
-            local correctGuess = false
-            for _, guessName in pairs(control.guessNames) do
-                local findStart, findEnd = string.find(self.state.currentGuess, guessName, 1, true)
-                if type(findStart) == "number" and type(findEnd) == "number" then
-                    correctGuess = true
-                    break
-                end
-            end
-            if correctGuess then
+            if program:isGuessCorrect(control, self.state.currentGuess) then
                 validGuesses = validGuesses + 1
             end
-        end
-        if validGuesses == #temporalEvent.controls-1 then
-            self.state.currentScore = self.state.currentScore + 1
-        else
-            if not temporalEvent.optional then
-                self.state.currentScore = self.state.currentScore - 1
-            end
 
-            -- Hint screen
-            -- FIXME: The sheer existence of this screen causes the program to bug ouit and calculate score wrong and I have NO fucking clue why
-            local flightHint = temporalEvent.description .. "\n" .. "Controls: "
-            for i, control in pairs(temporalEvent.controls) do
-                flightHint = flightHint .. control.displayName .. (i < #temporalEvent.controls-1 and "," or "")
+            -- DEBUG
+            if debug then
+                self.messages.flightHint = {
+                    name = "DEBUG",
+                    description = "Guess names: " .. string.lower(json.stringify(control.guessNames)),
+                    controls = "Your guess was \"" .. string.lower(self.state.currentGuess) .. "\""
+                }
             end
-            self.messages.flightHint = flightHint
+        end
+        if not debug then
+            if validGuesses == (#temporalEvent.controls) then
+                self.state.currentScore = self.state.currentScore + 1
+                self.state.currentGuess = ""
+            else
+                if not temporalEvent.optional then
+                    self.state.currentScore = self.state.currentScore - 1
+                end
+
+                -- Hint screen
+                -- FIXME: The sheer existence of this screen causes the program to bug ouit and calculate score wrong and I have NO fucking clue why
+                local flightHint = {
+                    name = "> " .. temporalEvent.displayName .. " <",
+                    description = temporalEvent.description,
+                    controls = "",
+                    youGot = ""
+                }
+                for i, control in pairs(temporalEvent.controls) do
+                    local comma = (i < #temporalEvent.controls and ", " or "")
+                    flightHint.controls = flightHint.controls .. control.displayName .. comma
+
+                    if program:isGuessCorrect(control, self.state.currentGuess) then
+                        flightHint.youGot = flightHint.youGot .. control.displayName .. comma
+                    else
+                        flightHint.youGot = "(none)"
+                    end
+                end
+                self.messages.flightHint = flightHint
+            end
         end
     end
 
@@ -239,21 +352,22 @@ function program:onKey(key, pressed, held)
     elseif self.state.page == pages.SelectThrottle then
         -- Picking the throttle
         local throttle = self.state.throttle
-        if key == keys.up or key == keys.w then
+        if key == keys.up or key == keys.right or key == keys.w or key == keys.d then
             throttle = throttle + 1
-        elseif key == keys.down or key == keys.s then
+        elseif key == keys.down or key == keys.left or key == keys.s or key == keys.a then
             throttle = throttle - 1
         end
         self.state.throttle = lib.extraMath.clamp(throttle, 1, 9)
 
         if key == keys.enter and self.state.throttle > 0 then
+            sleep(0.1)
             self.state.page = pages.EventTraining
         end
 
         self.assets.button:playOnce()
     elseif self.state.page == pages.EventTraining then
         if key == keys.enter then
-            self:resetGuessTimer()
+            self:tryResetGuessTimer()
         elseif key == keys.backspace then
             self.state.currentGuess = string.sub(self.state.currentGuess, 1, #self.state.currentGuess - 1)
         end

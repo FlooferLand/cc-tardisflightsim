@@ -19,7 +19,7 @@ local theme = {
     }
 }
 theme.unloadTheme = function(monitors)
-    for key, value in pairs(theme) do
+    for _, value in pairs(theme) do
         if type(value) ~= "table" then break end
         for name, color in pairs(value) do
             if type(color) == "number" and hexColors[name] ~= nil then
@@ -36,7 +36,7 @@ theme.loadBuiltinTheme = function(monitors, themeToLoad)
     if themeToLoad == themes.generic then
         for _, monitor in pairs(monitors) do
             monitor.setPaletteColor(colors.white, hexColors.white)
-            monitor.setPaletteColor(colors.cyan, hexColors.blend(hexColors.cyan, hexColors.black, 0.2))
+            monitor.setPaletteColor(colors.cyan, hexColors.blend(hexColors.cyan, hexColors.lightBlue, 0.4))
             monitor.setPaletteColor(colors.gray, hexColors.blend(hexColors.gray, hexColors.black, 0.2))
             monitor.setPaletteColor(colors.pink, hexColors.blend(hexColors.black, hexColors.brown, 0.3))
         end

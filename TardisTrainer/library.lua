@@ -45,6 +45,12 @@ function table.keys(table)
     return keyArray
 end
 
+function table.clear(table)
+    for k in pairs(table) do
+        table[k] = nil
+    end
+end
+
 -- Mafs
 local extraMath = {
     lerp = function(a, b, t)

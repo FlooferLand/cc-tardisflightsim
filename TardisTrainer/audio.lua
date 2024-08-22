@@ -90,10 +90,10 @@ function audio:runInternal(speaker, delta)
 
         -- Crossfade with the previous buffer
         if previousBuffer ~= nil and self.effects.delay > 0.0 then
-            for i = 1, math.min(#newBuffer, #previousBuffer) do
+            for c = 1, math.min(#newBuffer, #previousBuffer) do
                 local t = (1 - smoothenIntensity)
-                newBuffer[i] = lib.extraMath.lerp(previousBuffer[i], newBuffer[i], t)
-                newBuffer[i] = lib.extraMath.clamp(newBuffer[i], -128, 127)
+                newBuffer[c] = lib.extraMath.lerp(previousBuffer[c], newBuffer[c], t)
+                newBuffer[c] = lib.extraMath.clamp(newBuffer[c], -128, 127)
             end
         end
 

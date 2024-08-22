@@ -23,21 +23,31 @@ local assets = {
     "Button.dfpwm",
     "FlightLoop.dfpwm",
     "FlightTakeoff.dfpwm",
-    "spinnyTardis_0.nfp",
-    "spinnyTardis_1.nfp",
+    "spinnyTardis_0.nimg",
+    "spinnyTardis_1.nimg",
     "themeSong.dfpwm",
 }
 local libraries = {
     {
         name = "json.lua",
         url = "https://gist.githubusercontent.com/tylerneylon/59f4bcf316be525b30ab/raw/7f69cc2cea38bf68298ed3dbfc39d197d53c80de/json.lua"
+    },
+    {
+        name = "nimg.lua",
+        url = "https://pastebin.com/raw/2nbDhRXC"
     }
 }
 
 -- Utility
-local function install(path, link)
-    local req = http.get(link)
-    local f = fs.open(path, 'w')
+---@param path string
+---@param link string
+---@param isBinary boolean|nil
+local function install(path, link, isBinary)
+    if isBinary == nil then
+        isBinary = false
+    end
+    local req = http.get(link, nil, isBinary)
+    local f = fs.open(path, isBinary and "wb" or "w")
     f.write(req.readAll())
     f.close()
     req.close()
@@ -59,7 +69,8 @@ if not (fs.exists(".devenv") or fs.exists(fs.combine(paths.folders.install, ".de
     end
     for _, filename in pairs(assets) do
         local git = "https://raw.githubusercontent.com/FlooferLand/cc-tardisflightsim/main/" .. paths.folders.install .. "/assets/"
-        install(fs.combine(paths.folders.assets, filename), git .. filename)
+        local isBinary = string.find(filename, ".dfpwm", 1, true) ~= nil
+        install(fs.combine(paths.folders.assets, filename), git .. filename, isBinary)
     end
 else
     print("Dev env detected")
@@ -68,6 +79,26 @@ for _, lib in pairs(libraries) do
     install(fs.combine(paths.folders.libs, lib.name), lib.url)
 end
 sleep(0.1)
+
+-- Nimg
+print("Initializing NimG")
+shell.run(fs.combine(paths.folders.libs, "nimg.lua") .. " update")
+print("Moving NimG dependency 'ButtonG'")
+local buttonH = {}
+buttonH.initial = "/ButtonH"
+buttonH.newFolder = fs.combine(paths.folders.install, "ButtonH")
+buttonH.new = fs.combine(buttonH.newFolder, "init.lua")
+buttonH.new2 = fs.combine(paths.folders.libs, "ButtonH.lua")
+if not fs.exists(buttonH.newFolder) then
+    fs.makeDir(buttonH.newFolder)
+end
+if fs.exists(buttonH.initial) and not fs.exists(buttonH.new) then
+    fs.move(buttonH.initial, buttonH.new)
+end
+if fs.exists(buttonH.new) and not fs.exists(buttonH.new2) then
+    fs.copy(buttonH.new, buttonH.new2)
+end
+term.clear()
 
 -- Running the system
 if not (fs.exists(".owner") or fs.exists(fs.combine(paths.folders.install, ".owner"))) then

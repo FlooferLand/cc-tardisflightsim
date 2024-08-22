@@ -119,19 +119,19 @@ local events = {
     SpatialDriftX = createEvent(
         "Spatial Drift (X)",
         { c.PosX },
-        "The TARDIS drifts off-course sometimes. Re-align yourselves on the X axis!",
+        "The TARDIS drifts off-course sometimes. Re-align yourself on the X axis!",
         { eventMarkers.TemporalAdditions }
     ),
     SpatialDriftY = createEvent(
         "Spatial Drift (Y)",
         { c.PosY },
-        "The TARDIS drifts off-course sometimes. Re-align yourselves on the Y axis!",
+        "The TARDIS drifts off-course sometimes. Re-align yourself on the Y axis!",
         { eventMarkers.TemporalAdditions }
     ),
     SpatialDriftZ = createEvent(
         "Spatial Drift (Z)",
         { c.PosZ },
-        "The TARDIS drifts off-course sometimes. Re-align yourselves on the Z axis!",
+        "The TARDIS drifts off-course sometimes. Re-align yourself on the Z axis!",
         { eventMarkers.TemporalAdditions }
     ),
     ArtronPocket = createEvent(
