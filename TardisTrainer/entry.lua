@@ -62,6 +62,11 @@ local function updateHandler()
             end
         end
 
+        -- Resetting redstone event signals before updating
+        for _, side in pairs({ program.config.redstoneEventOutputSide }) do
+            redstone.setAnalogOutput(side, 0)
+        end
+
         -- Updating and rendering
         program:update()
         for _, monitor in pairs(program.devices.monitors) do
@@ -69,7 +74,7 @@ local function updateHandler()
             monitor.setBackgroundColor(program.theme.back.clear)
             monitor.setTextColor(program.theme.front.text)
             monitor.clear()
-            monitor.setCursorPos(2,2)
+            monitor.setCursorPos(1,1)
             program:draw(monitor)
         end
 
@@ -164,7 +169,7 @@ else
 end
 program.theme = theme.loadBuiltinTheme(program.devices.monitors, program.config.theme)
 for _, monitor in pairs(program.devices.monitors) do  -- Changing the monitor scaling
-    if program.config.changeMonitorScaling then
+    if program.config.changeMonitorScaling and monitor["setTextScale"] ~= nil then
         monitor.setTextScale(lib.extraMath.clamp(program.config.preferredMonitorScaling, 0.5, 5))
     end
 end

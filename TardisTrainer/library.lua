@@ -101,7 +101,7 @@ function config.load(self, defaults)
     local config = json.parse(file.readAll()) or defaults
     file.close()
     if type(config) == "table" then
-        return config
+        return table.append(defaults, config)
     else
         return "Error: Config file at path \""..self.path.."\" is not a JSON object!"
     end

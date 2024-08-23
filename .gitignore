@@ -1,6 +1,9 @@
 # Custom
 .devenv
 .owner
+**/conf.json
+**/lib/
+
 
 # Compiled Lua sources
 luac.out
