@@ -163,6 +163,11 @@ else
     program.messages.error = loadedConfig
 end
 program.theme = theme.loadBuiltinTheme(program.devices.monitors, program.config.theme)
+for _, monitor in pairs(program.devices.monitors) do  -- Changing the monitor scaling
+    if program.config.changeMonitorScaling then
+        monitor.setTextScale(lib.extraMath.clamp(program.config.preferredMonitorScaling, 0.5, 5))
+    end
+end
 
 -- Running the main loop
 program:start()
@@ -173,6 +178,9 @@ program:stop()
 configManager:save(program.config)
 program.theme = theme.unloadTheme(program.devices.monitors)  -- Resets the colour palette
 for _, monitor in pairs(program.devices.monitors) do
+    if program.config.changeMonitorScaling then
+        monitor.setTextScale(1.0)
+    end
     monitor.setBackgroundColor(colors.black)
     monitor.setTextColor(colors.white)
     monitor.clear()

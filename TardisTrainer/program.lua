@@ -2,8 +2,8 @@ local lib = require("library")
 local theme = require("theme")
 local audio = require("audio")
 local eventTraining = require("eventTraining")
-local nimg = require('lib.nimg')
-local json = require('lib.json')
+local nimg = require("lib.nimg")
+local json = require("lib.json")
 
 local pages = {
     Title = 0,
@@ -26,6 +26,8 @@ local program = {
         limitedTime = true,
         redstoneEventInputSide = "left",
         redstoneThrottleInputSide = "right",
+        changeMonitorScaling = true,
+        preferredMonitorScaling = 0.5,  -- Range: 0.5 <-> 1.5
         muteAudio = false
     },
     devices = {
@@ -47,14 +49,17 @@ local program = {
         currentScore = 0
     },
     drawState = {
-        repositionStars = 0,
+        repositionStars = false,
+        repositionTimeVortex = false,
         starsPos = {},
+        timeVortexWavesPos = {},
         tardisSpin = 0,
     },
     timers = {
         askNext = nil,
         drawTardisSpin = nil,
-        drawStars = nil
+        drawStars = nil,
+        drawTimeVortex = nil
     },
     assets = {
         themeSong = audio.load("TardisTrainer/assets/themeSong.dfpwm"),
@@ -146,6 +151,9 @@ function program:update()
     if self.timers.drawStars == nil then
         self.timers.drawStars = os.startTimer(0.2)  ---@diagnostic disable-line: undefined-field
     end
+    if self.timers.drawTimeVortex == nil then
+        self.timers.drawTimeVortex = os.startTimer(0.15)  ---@diagnostic disable-line: undefined-field
+    end
 end
 
 -- Like update, but called for every single monitor
@@ -191,7 +199,7 @@ function program:draw(monitor)
         print("TARDIS Training Software")
         monitor.setCursorPos(2, 3)
         monitor.setTextColor(self.theme.front.secondary)
-        print("by FlooferLand (T Corvus Escort 1)")
+        print("by FlooferLand (Corvus Escort 1)")
 
         -- Begin text
         local beginText = "Press any to begin"
@@ -215,6 +223,34 @@ function program:draw(monitor)
         local rightArrow = (self.state.throttle < 9) and ">" or " "
         print(leftArrow .. " " .. lib.extraMath.clamp(self.state.throttle, 1, 9) .. " / 9" .. " " .. rightArrow)
     elseif self.state.page == pages.EventTraining then
+        -- Drawing the time vortex
+        if self.drawState.repositionTimeVortex then
+            local width, height = monitor.getSize()
+            table.clear(self.drawState.timeVortexWavesPos)
+            for i = 0, 64 / (width / height) do
+                local cols = { colors.cyan, colors.blue }
+                local new = {
+                    x = math.random(0, width),
+                    y = math.random(0, height),
+                    color = cols[math.random(1, #cols)],
+                }
+                self.drawState.timeVortexWavesPos[i] = {
+                    x = lib.extraMath.lerp((self.drawState.timeVortexWavesPos[i] or new).x, new.x, 0.4),
+                    y = lib.extraMath.lerp((self.drawState.timeVortexWavesPos[i] or new).y, new.y, 0.4),
+                    color = new.color
+                }
+            end
+            self.drawState.repositionTimeVortex = false
+        end
+        for _, pos in pairs(self.drawState.timeVortexWavesPos) do
+            local chars = { '\\', '/', '|', '-' }
+            monitor.setBackgroundColor(self.theme.back.clear)
+            monitor.setTextColor(pos.color)
+            monitor.setCursorPos(pos.x, pos.y)
+            monitor.write(chars[math.random(1, #chars)])
+        end
+
+        -- Drawing the text
         monitor.setCursorPos(1, 1)
         if self.state.activeTemporalEvent then
             monitor.setCursorPos(1, 1)
@@ -227,7 +263,7 @@ function program:draw(monitor)
 
             -- Displaying the current guess
             monitor.setTextColor(self.theme.front.secondary)
-            print("Your answer >" .. self.state.currentGuess .. "<")
+            print("Your answer >" .. self.state.currentGuess .. "<" .. " ")
         else
             print("Flying normally.. (no events active)\n")
         end
@@ -273,6 +309,9 @@ function program:onTimer(id)
     elseif id == self.timers.drawStars then
         self.drawState.repositionStars = true
         self.timers.drawStars = nil
+    elseif id == self.timers.drawTimeVortex then
+        self.drawState.repositionTimeVortex = true
+        self.timers.drawTimeVortex = nil
     end
 end
 
