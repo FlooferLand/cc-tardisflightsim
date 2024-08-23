@@ -30,7 +30,7 @@ local function eventHandler()
         elseif event == "char" then
             local char = data1
             program:onChar(char)
-        elseif event == "mouse_click" then
+        elseif event == "mouse_click" or event == "monitor_touch" then
             local button, x, y = data1, data2, data3
             program:onMouseClick(button, x, y)
         elseif event == "timer" then
