@@ -492,7 +492,7 @@ function program:onRedstone()
     end
 end
 
--- Called when the mouse clicks
+-- Called when the mouse clicks or when an advanced monitor is tapped
 function program:onMouseClick(button, x, y)
     if self.state.page == pages.Title or subpages.isSubpageOf(pages.Title, self.state.page) then
         if self.state.page == pages.Title then
@@ -504,6 +504,10 @@ function program:onMouseClick(button, x, y)
         self:nextPage()
     elseif self.state.page == pages.SelectThrottle then
         self:nextPage()
+    elseif self.state.page == pages.EventTraining then
+        if self.messages.flightHint ~= nil then
+            self.messages.flightHint = nil
+        end
     elseif self.state.page == pages.TardisGoBoomBoom then
         self:reset()
     end
