@@ -513,6 +513,14 @@ function program:onMouseClick(button, x, y)
     end
 end
 
+-- Called when the mouse scrolls
+function program:onMouseScroll(direction, x, y)
+    -- Throttle control
+    local throttle = self.state.throttle
+    throttle = throttle - direction
+    self.state.throttle = lib.extraMath.clamp(throttle, 1, 9)
+end
+
 -- Called when a key is pressed, held, or released
 function program:onKey(key, pressed, held)
     if held or not pressed then

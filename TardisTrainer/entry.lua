@@ -33,6 +33,9 @@ local function eventHandler()
         elseif event == "mouse_click" or event == "monitor_touch" then
             local button, x, y = data1, data2, data3
             program:onMouseClick(button, x, y)
+        elseif event == "mouse_scroll" then
+            local direction, x, y = data1, data2, data3
+            program:onMouseScroll(direction, x, y)
         elseif event == "timer" then
             local timerId = data1
             program:onTimer(timerId)
