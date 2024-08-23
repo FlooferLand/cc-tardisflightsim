@@ -126,6 +126,14 @@ function program:reset()
     self.state.page = pages.Title  -- CHECKME: Might not be necessary
 end
 
+--- @param value integer
+function program:setThrottle(value)
+    self.state.throttle = lib.extraMath.clamp(value, 1, 9)
+    for _, speaker in pairs(self.devices.speakers) do
+        speaker.playNote("hat", 1.0, 12 + self.state.throttle)
+    end
+end
+
 function program:tryResetGuessTimer()
     if self.timers.askNext ~= nil then
         os.cancelTimer(self.timers.askNext)  ---@diagnostic disable-line: undefined-field
@@ -276,11 +284,33 @@ function program:draw(monitor)
     elseif self.state.page == pages.Command then
         -- TODO: Add a command line that sorta acts like a main menu
     elseif self.state.page == pages.SelectThrottle then
+        -- Info text
         monitor.setCursorPos(1, 1)
-        print("Select the throttle using your arrow keys")
-        local leftArrow = (self.state.throttle > 1) and "<" or " "
-        local rightArrow = (self.state.throttle < 9) and ">" or " "
-        print(leftArrow .. " " .. lib.extraMath.clamp(self.state.throttle, 1, 9) .. " / 9" .. " " .. rightArrow)
+        monitor.setBackgroundColor(self.theme.back.clear)
+        monitor.setTextColor(self.theme.front.text)
+        monitor.write("Select the throttle using your arrow keys")
+
+        -- Left arrow
+        if self.state.throttle > 1 then
+            monitor.setCursorPos(1, 2)
+            monitor.setBackgroundColor(self.theme.back.clear2)
+            monitor.setTextColor(self.theme.front.text)
+            monitor.write("<")
+        end
+
+        -- Throttle amount display
+        monitor.setCursorPos(3, 2)
+        monitor.setBackgroundColor(self.theme.back.clear)
+        monitor.setTextColor(self.theme.front.text)
+        monitor.write(self.state.throttle .. " / 9")
+
+        -- Right arrow
+        if self.state.throttle < 9 then
+            monitor.setCursorPos(9, 2)
+            monitor.setBackgroundColor(self.theme.back.clear2)
+            monitor.setTextColor(self.theme.front.text)
+            monitor.write(">")
+        end
     elseif self.state.page == pages.EventTraining then
         if self.messages.flightHint == nil then
             -- Drawing the time vortex
@@ -488,7 +518,7 @@ function program:onRedstone()
 
     local throttleInput = redstone.getAnalogInput(self.config.redstoneThrottleInputSide)
     if throttleInput > 0 then
-        self.state.throttle = lib.extraMath.clamp(throttleInput, 1, 9)
+        self:setThrottle(throttleInput)
     end
 end
 
@@ -503,7 +533,18 @@ function program:onMouseClick(button, x, y)
     elseif self.state.page == pages.Tutorial then
         self:nextPage()
     elseif self.state.page == pages.SelectThrottle then
-        self:nextPage()
+        local throttle = self.state.throttle
+
+        -- FIXME: The throttle arrow click positions use magic numbers
+        if (y > 1 and y < 4) and x < 12 then
+            if (x > 0 and x < 4) then
+                self:setThrottle(throttle - 1)
+            elseif (x > 7 and x < 10) then
+                self:setThrottle(throttle + 1)
+            end
+        else
+            self:nextPage()
+        end
     elseif self.state.page == pages.EventTraining then
         if self.messages.flightHint ~= nil then
             self.messages.flightHint = nil
@@ -515,10 +556,20 @@ end
 
 -- Called when the mouse scrolls
 function program:onMouseScroll(direction, x, y)
-    -- Throttle control
-    local throttle = self.state.throttle
-    throttle = throttle - direction
-    self.state.throttle = lib.extraMath.clamp(throttle, 1, 9)
+    self:setThrottle(self.state.throttle - direction)
+    if self.state.page ~= pages.SelectThrottle then
+        for _, monitor in pairs(self.devices.monitors) do
+            local _, y = monitor.getSize()
+            monitor.setTextColor(self.theme.front.text)
+            monitor.setBackgroundColor(self.theme.back.clear2)
+            monitor.setCursorPos(1, y - 1)
+            term.redirect(monitor)
+            print("Throttle = "..self.state.throttle)
+            monitor.setTextColor(self.theme.front.text)
+            monitor.setBackgroundColor(self.theme.back.clear)
+            monitor.setCursorPos(1, 1)
+        end
+    end
 end
 
 -- Called when a key is pressed, held, or released
@@ -530,11 +581,10 @@ function program:onKey(key, pressed, held)
     -- Throttle control
     local throttle = self.state.throttle
     if key == keys.up or key == keys.right or key == keys.w or key == keys.d then
-        throttle = throttle + 1
+        self:setThrottle(throttle + 1)
     elseif key == keys.down or key == keys.left or key == keys.s or key == keys.a then
-        throttle = throttle - 1
+        self:setThrottle(throttle - 1)
     end
-    self.state.throttle = lib.extraMath.clamp(throttle, 1, 9)
 
     -- Title pages
     if self.state.page == pages.Title then
