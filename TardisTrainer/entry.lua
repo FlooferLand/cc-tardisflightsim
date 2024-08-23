@@ -186,7 +186,7 @@ program:stop()
 configManager:save(program.config)
 program.theme = theme.unloadTheme(program.devices.monitors)  -- Resets the colour palette
 for _, monitor in pairs(program.devices.monitors) do
-    if program.config.changeMonitorScaling then
+    if program.config.changeMonitorScaling and monitor["setTextScale"] ~= nil then
         monitor.setTextScale(1.0)
     end
     monitor.setBackgroundColor(colors.black)
