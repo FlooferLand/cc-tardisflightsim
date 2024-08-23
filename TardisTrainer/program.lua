@@ -547,7 +547,7 @@ function program:onMouseClick(button, x, y)
         end
     elseif self.state.page == pages.EventTraining then
         if self.messages.flightHint ~= nil then
-            self.messages.flightHint = nil
+            self:tryResetGuessTimer()
         end
     elseif self.state.page == pages.TardisGoBoomBoom then
         self:reset()
