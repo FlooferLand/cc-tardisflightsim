@@ -11,7 +11,7 @@ local function eventHandler()
         local lastError = currentError
 
         local event, data1, data2, data3 = os.pullEventRaw()  ---@diagnostic disable-line: undefined-field
-        if event == "terminate" then
+        if event == "terminate" or event == "computer_unload" or event == "unload" then
             program.low.running = false
             return
         elseif event == "key" then
@@ -191,4 +191,5 @@ for _, monitor in pairs(program.devices.monitors) do
     monitor.clear()
     monitor.setCursorPos(1,1)
 end
-print("Exited the training program..")
+term.setCursorPos(1,1)
+term.write("Exited the training program..")
