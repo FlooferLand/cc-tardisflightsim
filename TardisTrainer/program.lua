@@ -580,9 +580,9 @@ function program:onKey(key, pressed, held)
 
     -- Throttle control
     local throttle = self.state.throttle
-    if key == keys.up or key == keys.right or key == keys.w or key == keys.d then
+    if (key == keys.up or key == keys.right) or ((key == keys.w or key == keys.d) and self.state.page == pages.SelectThrottle) then
         self:setThrottle(throttle + 1)
-    elseif key == keys.down or key == keys.left or key == keys.s or key == keys.a then
+    elseif (key == keys.down or key == keys.left) or ((key == keys.s or key == keys.a) and self.state.page == pages.SelectThrottle) then
         self:setThrottle(throttle - 1)
     end
 
