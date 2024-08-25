@@ -203,24 +203,20 @@ function program:draw(monitor)
         local pad = 12
         local tardisWidth = 7
         local tardisHeight = 6
+        local monitorSize = monitor.getSize()
         local width, height = monitor.getSize()
         local xMiddle = (width / 2)
         local yMiddle = (height / 2)
         local xTardis = xMiddle - tardisWidth - pad
         local yTardis = yMiddle - tardisHeight
 
-        local monitorName = monitor
-        if monitorName == nil then
-            monitorName = "default"
-        end
-
         -- Drawing the stars
         if self.drawState.repositionStars then
-            self.drawState.starsPos[monitorName] = {}
+            self.drawState.starsPos[monitorSize] = {}
             for i = 0, 64 / (width / height) do
                 local cols = { colors.gray, colors.lightGray, colors.lightBlue, colors.yellow }
                 
-                self.drawState.starsPos[monitorName][i] = {
+                self.drawState.starsPos[monitorSize][i] = {
                     x = math.random(0, width - i),
                     y = math.random(0, height),
                     color = cols[math.random(1, #cols)],
@@ -228,8 +224,8 @@ function program:draw(monitor)
             end
             self.drawState.repositionStars = false
         end
-        if self.drawState.starsPos[monitorName] ~= nil then
-            for _, star in pairs(self.drawState.starsPos[monitorName]) do
+        if self.drawState.starsPos[monitorSize] ~= nil then
+            for _, star in pairs(self.drawState.starsPos[monitorSize]) do
                 local chars = { '*', '+', 'x' }
                 monitor.setBackgroundColor(self.theme.back.clear)
                 monitor.setTextColor(star.color)
