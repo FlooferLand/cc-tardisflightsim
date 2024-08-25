@@ -54,7 +54,7 @@ function audio:playOnce()
 end
 
 --- Gets called every frame no matter what
-function audio:runInternal(speaker, delta)
+function audio:runInternal(program, speaker, delta)
     if not self.playing then
         return
     end
@@ -79,7 +79,7 @@ function audio:runInternal(speaker, delta)
         local newBuffer = {}
         for _, a in pairs(buffer) do
             -- Volume
-            a = a * self.effects.volume + smoothenIntensity
+            a = ((a * self.effects.volume) * program.config.audioVolume) + smoothenIntensity
 
             -- Distortion
             a = lib.extraMath.lerp(a, 0.0, ((a+128) / 128) * self.effects.distort)

@@ -1,1 +1,1 @@
-{"theme":"generic", "redstoneEventInputSide":"left", "limitedTime":true, "muteAudio":false, "redstoneThrottleInputSide":"right", "flightSound":true, "music":true, "firstTimeSetup":true, "temporalAdditions":true}
+{"music":true, "flightSound":true, "limitedLives":true, "redstoneEventOutputSide":"left", "changeMonitorScaling":true, "muteAudio":false, "redstoneThrottleInputSide":"right", "firstTimeSetup":true, "theme":"generic", "preferredMonitorScaling":0.5, "limitedTime":true, "audioVolume":0.8, "redstoneEventInputSide":"left", "temporalAdditions":true}

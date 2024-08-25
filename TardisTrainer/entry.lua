@@ -148,7 +148,7 @@ local function addAudioAssets(assetsTable)
                 table.insert(audioHandles, function()
                     while true do
                         if asset.playing then
-                            asset:runInternal(speaker, program.low.deltaTime)
+                            asset:runInternal(program, speaker, program.low.deltaTime)
                         end
                         coroutine.yield()
                     end

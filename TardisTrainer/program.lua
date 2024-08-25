@@ -41,6 +41,7 @@ local program = {  --- Contains all program functions
         firstTimeSetup = true,
         theme = "generic",
 
+        audioVolume = 0.8,
         music = true,
         flightSound = true,
         temporalAdditions = true,
