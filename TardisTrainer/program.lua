@@ -209,25 +209,33 @@ function program:draw(monitor)
         local xTardis = xMiddle - tardisWidth - pad
         local yTardis = yMiddle - tardisHeight
 
+        local monitorName = monitor
+        if monitorName == nil then
+            monitorName = "default"
+        end
+
         -- Drawing the stars
         if self.drawState.repositionStars then
-            table.clear(self.drawState.starsPos)
+            self.drawState.starsPos[monitorName] = {}
             for i = 0, 64 / (width / height) do
-                local cols = { colors.gray, colors.lightGray, colors.lightBlue }
-                self.drawState.starsPos[i] = {
-                    x = math.random(0, width),
+                local cols = { colors.gray, colors.lightGray, colors.lightBlue, colors.yellow }
+                
+                self.drawState.starsPos[monitorName][i] = {
+                    x = math.random(0, width - i),
                     y = math.random(0, height),
                     color = cols[math.random(1, #cols)],
                 }
             end
             self.drawState.repositionStars = false
         end
-        for _, star in pairs(self.drawState.starsPos) do
-            local chars = { '*', '+', 'x' }
-            monitor.setBackgroundColor(self.theme.back.clear)
-            monitor.setTextColor(star.color)
-            monitor.setCursorPos(star.x, star.y)
-            monitor.write(chars[math.random(1, #chars)])
+        if self.drawState.starsPos[monitorName] ~= nil then
+            for _, star in pairs(self.drawState.starsPos[monitorName]) do
+                local chars = { '*', '+', 'x' }
+                monitor.setBackgroundColor(self.theme.back.clear)
+                monitor.setTextColor(star.color)
+                monitor.setCursorPos(star.x, star.y)
+                monitor.write(chars[math.random(1, #chars)])
+            end
         end
         
         -- Page specific stuff
