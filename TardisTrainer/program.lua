@@ -41,6 +41,7 @@ local program = {  --- Contains all program functions
         firstTimeSetup = true,
         theme = "generic",
 
+        fancyGraphics = true,
         audioVolume = 0.8,
         music = true,
         flightSound = true,
@@ -186,11 +187,13 @@ function program:update()
     if self.timers.drawTardisSpin == nil then
         self.timers.drawTardisSpin = os.startTimer(0.3)  ---@diagnostic disable-line: undefined-field
     end
-    if self.timers.drawStars == nil then
-        self.timers.drawStars = os.startTimer(0.2)  ---@diagnostic disable-line: undefined-field
-    end
-    if self.timers.drawTimeVortex == nil then
-        self.timers.drawTimeVortex = os.startTimer(0.15)  ---@diagnostic disable-line: undefined-field
+    if self.config.fancyGraphics then
+        if self.timers.drawStars == nil then
+            self.timers.drawStars = os.startTimer(0.2)  ---@diagnostic disable-line: undefined-field
+        end
+        if self.timers.drawTimeVortex == nil then
+            self.timers.drawTimeVortex = os.startTimer(0.15)  ---@diagnostic disable-line: undefined-field
+        end
     end
 end
 

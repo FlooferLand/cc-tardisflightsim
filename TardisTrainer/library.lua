@@ -111,7 +111,13 @@ end
 --- @param conf table
 function config.save(self, conf)
     local file = fs.open(self.path, "w")
-    file.write(json.stringify(conf))
+    local confStr = json.stringify(conf)  --- @type string
+    confStr = confStr
+        :gsub("%\"%:", "\": ")
+        :gsub("%, %\"", ",\n\"")
+        :gsub("%}", "\n}")
+        :gsub("%{", "{\n")
+    file.write(confStr)
     file.close()
 end
 
