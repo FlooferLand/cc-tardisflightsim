@@ -189,11 +189,11 @@ function program:update()
     end
     if self.config.fancyGraphics then
         if self.timers.drawStars == nil then
-            self.timers.drawStars = os.startTimer(0.2)  ---@diagnostic disable-line: undefined-field
+            self.timers.drawStars = os.startTimer(0.5)  ---@diagnostic disable-line: undefined-field
         end
-        if self.timers.drawTimeVortex == nil then
-            self.timers.drawTimeVortex = os.startTimer(0.15)  ---@diagnostic disable-line: undefined-field
-        end
+        -- if self.timers.drawTimeVortex == nil then
+        --     self.timers.drawTimeVortex = os.startTimer(0.15)  ---@diagnostic disable-line: undefined-field
+        -- end
     end
 end
 
@@ -213,7 +213,7 @@ function program:draw(monitor)
         if self.drawState.repositionStars then
             table.clear(self.drawState.starsPos)
             for i = 0, 64 / (width / height) do
-                local cols = { colors.gray, colors.lightGray }
+                local cols = { colors.gray, colors.lightGray, colors.lightBlue }
                 self.drawState.starsPos[i] = {
                     x = math.random(0, width),
                     y = math.random(0, height),
@@ -318,31 +318,31 @@ function program:draw(monitor)
     elseif self.state.page == pages.EventTraining then
         if self.messages.flightHint == nil then
             -- Drawing the time vortex
-            if self.drawState.repositionTimeVortex then
-                local width, height = monitor.getSize()
-                table.clear(self.drawState.timeVortexWavesPos)
-                for i = 0, 64 / (width / height) do
-                    local cols = { colors.cyan, colors.blue }
-                    local new = {
-                        x = math.random(0, width),
-                        y = math.random(0, height),
-                        color = cols[math.random(1, #cols)],
-                    }
-                    self.drawState.timeVortexWavesPos[i] = {
-                        x = lib.extraMath.lerp((self.drawState.timeVortexWavesPos[i] or new).x, new.x, 0.4),
-                        y = lib.extraMath.lerp((self.drawState.timeVortexWavesPos[i] or new).y, new.y, 0.4),
-                        color = new.color
-                    }
-                end
-                self.drawState.repositionTimeVortex = false
-            end
-            for _, pos in pairs(self.drawState.timeVortexWavesPos) do
-                local chars = { '\\', '/', '|', '-' }
-                monitor.setBackgroundColor(self.theme.back.clear)
-                monitor.setTextColor(pos.color)
-                monitor.setCursorPos(pos.x, pos.y)
-                monitor.write(chars[math.random(1, #chars)])
-            end
+            -- if self.drawState.repositionTimeVortex then
+            --     local width, height = monitor.getSize()
+            --     table.clear(self.drawState.timeVortexWavesPos)
+            --     for i = 0, 64 / (width / height) do
+            --         local cols = { colors.cyan, colors.blue }
+            --         local new = {
+            --             x = math.random(0, width),
+            --             y = math.random(0, height),
+            --             color = cols[math.random(1, #cols)],
+            --         }
+            --         self.drawState.timeVortexWavesPos[i] = {
+            --             x = lib.extraMath.lerp((self.drawState.timeVortexWavesPos[i] or new).x, new.x, 0.4),
+            --             y = lib.extraMath.lerp((self.drawState.timeVortexWavesPos[i] or new).y, new.y, 0.4),
+            --             color = new.color
+            --         }
+            --     end
+            --     self.drawState.repositionTimeVortex = false
+            -- end
+            -- for _, pos in pairs(self.drawState.timeVortexWavesPos) do
+            --     local chars = { '\\', '/', '|', '-' }
+            --     monitor.setBackgroundColor(self.theme.back.clear)
+            --     monitor.setTextColor(pos.color)
+            --     monitor.setCursorPos(pos.x, pos.y)
+            --     monitor.write(chars[math.random(1, #chars)])
+            -- end
 
             -- Drawing the text
             monitor.setCursorPos(1, 2)
